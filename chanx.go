@@ -67,6 +67,11 @@ func (obj *Client[T]) get() (T, bool) {
 	v, o := obj.buf.Remove(obj.buf.Front()).(T)
 	return v, o
 }
+func (obj *Client[T]) Len() int {
+	obj.lock.Lock()
+	defer obj.lock.Unlock()
+	return obj.buf.Len()
+}
 
 func (obj *Client[T]) send() error {
 	for obj.buf.Len() > 0 {
