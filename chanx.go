@@ -16,7 +16,7 @@ type Client[T any] struct {
 	cnl2  context.CancelFunc
 	lock  sync.RWMutex
 	note  chan struct{}
-	timer time.Timer
+	timer *time.Timer
 }
 
 func NewClient[T any](preCtx context.Context) *Client[T] {
@@ -26,14 +26,13 @@ func NewClient[T any](preCtx context.Context) *Client[T] {
 	ctx, cnl := context.WithCancel(preCtx)
 	ctx2, cnl2 := context.WithCancel(preCtx)
 	client := &Client[T]{
-		pip:   make(chan T),
-		buf:   list.New(),
-		ctx:   ctx,
-		cnl:   cnl,
-		ctx2:  ctx2,
-		cnl2:  cnl2,
-		note:  make(chan struct{}),
-		timer: *time.NewTimer(0),
+		pip:  make(chan T),
+		buf:  list.New(),
+		ctx:  ctx,
+		cnl:  cnl,
+		ctx2: ctx2,
+		cnl2: cnl2,
+		note: make(chan struct{}),
 	}
 	go client.run()
 	return client
@@ -88,7 +87,11 @@ func (obj *Client[T]) send() error {
 func (obj *Client[T]) run() {
 	defer obj.Close()
 	for {
-		obj.timer.Reset(time.Second * 5)
+		if obj.timer == nil {
+			obj.timer = time.NewTimer(time.Second * 5)
+		} else {
+			obj.timer.Reset(time.Second * 5)
+		}
 		select {
 		case <-obj.ctx2.Done():
 			return
@@ -113,7 +116,9 @@ func (obj *Client[T]) Join() { //等待消费完毕后，关闭
 func (obj *Client[T]) Close() { //立刻关闭
 	obj.cnl()
 	obj.cnl2()
-	obj.timer.Stop()
+	if obj.timer != nil {
+		obj.timer.Stop()
+	}
 }
 func (obj *Client[T]) Ctx() context.Context {
 	return obj.ctx2
