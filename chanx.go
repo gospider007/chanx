@@ -109,7 +109,7 @@ func (obj *Client[T]) run() {
 		}
 	}
 }
-func (obj *Client[T]) Join() { //等待消费完毕后，关闭
+func (obj *Client[T]) JoinClose() { //等待消费完毕后，关闭
 	obj.cnl()
 	<-obj.ctx2.Done()
 }
