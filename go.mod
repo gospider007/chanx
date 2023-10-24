@@ -1,3 +1,2 @@
-module gitee.com/baixudong/chanx
-
-go 1.21.0
+module github.com/gospider007/chanx
+go 1.21.3
