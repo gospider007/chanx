@@ -40,9 +40,9 @@ func NewClient[T any](preCtx context.Context) *Client[T] {
 func (obj *Client[T]) Add(val T) error {
 	select {
 	case <-obj.ctx.Done():
-		return obj.ctx.Err()
+		return context.Cause(obj.ctx)
 	case <-obj.ctx2.Done():
-		return obj.ctx2.Err()
+		return context.Cause(obj.ctx2)
 	default:
 		obj.push(val)
 		select {
@@ -78,7 +78,7 @@ func (obj *Client[T]) send() error {
 			select {
 			case obj.pip <- remVal:
 			case <-obj.ctx2.Done():
-				return obj.ctx2.Err()
+				return context.Cause(obj.ctx2)
 			}
 		}
 	}
